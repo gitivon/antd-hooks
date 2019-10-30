@@ -1,0 +1,36 @@
+{
+  "name": "ivon-hooks",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@types/jest": "24.0.20",
+    "@types/node": "12.11.7",
+    "@types/react": "^16.9.11",
+    "@types/react-dom": "16.9.3",
+    "react": "^16.11.0",
+    "react-dom": "^16.11.0",
+    "react-scripts": "3.2.0",
+    "typescript": "3.6.4"
+  },
+  "scripts": {
+    "start": "yarn storybook",
+    "storybook": "start-storybook -p 6008"
+  },
+  "peerDependencies": {
+    "antd": "^3.24.3",
+    "react": "^16.8.0",
+    "react-dom": "^16.8.0"
+  },
+  "devDependencies": {
+    "@babel/preset-env": "^7.6.3",
+    "@storybook/addon-options": "^5.2.5",
+    "@storybook/react": "^5.2.5",
+    "antd": "^3.24.3",
+    "babel-plugin-import": "^1.12.2",
+    "babel-preset-env": "^1.7.0",
+    "babel-preset-react": "^6.24.1",
+    "css-loader": "^3.2.0",
+    "less-loader": "^5.0.0",
+    "style-loader": "^1.0.0"
+  }
+}
