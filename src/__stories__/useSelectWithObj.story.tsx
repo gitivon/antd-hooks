@@ -52,24 +52,38 @@ const StudentSelect: FC = forwardRef<any, any>((props, ref) => {
 
 interface Teacher {
   name: string;
-  classes: number[];
+  classes: Iclass[];
+}
+interface Iclass {
+  name: string;
+  time: string;
 }
 interface IformProps {
   student: Istudent;
   teacher: Teacher;
-  classes: number[];
+  classes: Iclass[];
 }
-const initialState = {
-  classes: ['一', '二'],
+const initialState: Partial<IformProps> = {
+  classes: [{
+    name: '语文',
+    time: '2019',
+  }, {
+    name: '数学',
+    time: '2020'
+  }],
 }
 const DemoForm: FC<FormComponentProps<IformProps>> = ({ form }) => {
   const { getFieldDecorator } = form;
   const [formData, setFormData] = useState<IformProps>()
-  const [items, addClass, remove] = useDynamicFormItem(initialState.classes);
+  const [items, { add, remove }] = useDynamicFormItem(initialState.classes);
   const onSubmit = useSubmit<IformProps>(form, setFormData);
   return (
     <>
-      <Form onSubmit={onSubmit}>
+      <Form style={{ width: 400 }} onSubmit={onSubmit} labelCol={{
+        span: 8
+      }} wrapperCol={{
+        span: 16
+      }}>
         <Form.Item label="学生">
           {getFieldDecorator('student')(
             <StudentSelect />
@@ -83,8 +97,14 @@ const DemoForm: FC<FormComponentProps<IformProps>> = ({ form }) => {
         </Form.Item>
         {items.map((key) =>
           <Form.Item label="classes" key={key}>
-            {getFieldDecorator(`classes[${key}]`, {
-              initialValue: initialState.classes[key],
+            {getFieldDecorator(`classes[${key}].name`, {
+              initialValue: initialState.classes && initialState.classes[key] && initialState.classes[key].name,
+              rules: [{ required: true }]
+            })(
+              <Input />
+            )}
+            {getFieldDecorator(`classes[${key}].time`, {
+              initialValue: initialState.classes && initialState.classes[key] && initialState.classes[key].time,
               rules: [{ required: true }]
             })(
               <Input />
@@ -99,12 +119,11 @@ const DemoForm: FC<FormComponentProps<IformProps>> = ({ form }) => {
           <Button type="primary" htmlType="submit">
             提交
           </Button>
-          <Button onClick={addClass}>增加班级</Button>
+          <Button onClick={add}>增加班级</Button>
         </Form.Item>
       </Form>
       <pre>
         <code>{JSON.stringify(formData)}</code>
-        <code>{JSON.stringify(items)}</code>
       </pre>
     </>
   )
@@ -112,5 +131,5 @@ const DemoForm: FC<FormComponentProps<IformProps>> = ({ form }) => {
 
 const Demo = Form.create()(DemoForm);
 
-storiesOf('State', module)
+storiesOf('Hooks', module)
   .add('useSelectWithObj', () => <Demo />)

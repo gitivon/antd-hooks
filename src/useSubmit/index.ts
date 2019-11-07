@@ -7,7 +7,7 @@ const useSubmit = <TOwnFormProps = any>(form: WrappedFormUtils<TOwnFormProps>, c
     form.validateFields((errors, values) => {
       !errors && cb(values);
     })
-  }, [form]);
+  }, [form, cb]);
 }
 
 export default useSubmit;

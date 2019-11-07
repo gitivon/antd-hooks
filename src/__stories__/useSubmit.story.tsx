@@ -11,5 +11,5 @@ export const Demo: FC = () => {
   )
 }
 
-storiesOf('State|useSubmit', module)
-  .add('Demo', () => <Demo />)
+storiesOf('Hooks', module)
+  .add('useSubmit', () => <Demo />)
