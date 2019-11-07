@@ -1,16 +1,11 @@
-import React, { FC } from 'react';
 import { storiesOf } from '@storybook/react';
-import useSubmit from '../useSubmit';
 import { Button } from 'antd';
+import React, { FC } from 'react';
 
-interface DemoProp {
-  
-}
-export const Demo: FC<DemoProp> = () => {
-  const [counter, setCounter] = useSubmit();
+export const Demo: FC = () => {
+  // const [counter] = useSubmit();
   return (
     <>
-      {counter}
       <Button type="primary">点我</Button>
     </>
   )
