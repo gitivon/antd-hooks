@@ -1,42 +1,40 @@
 {
-  "name": "ivon-hooks",
-  "version": "0.1.0",
   "private": true,
-  "dependencies": {
-    "@types/jest": "24.0.20",
-    "@types/node": "12.11.7",
-    "@types/react": "^16.9.11",
-    "@types/react-dom": "16.9.3",
-    "react": "^16.11.0",
-    "react-dom": "^16.11.0",
-    "react-scripts": "3.2.0",
-    "typescript": "3.6.4"
-  },
   "scripts": {
-    "start": "yarn storybook",
-    "storybook": "start-storybook -p 6008",
-    "format": "eslint --fix 'src/**/*.{js,ts,tsx,jsx}'"
+    "start": "umi dev",
+    "build": "umi build",
+    "postinstall": "umi generate tmp",
+    "prettier": "prettier --write '**/*.{js,jsx,tsx,ts,less,md,json}'",
+    "test": "umi-test",
+    "test:coverage": "umi-test --coverage"
   },
-  "peerDependencies": {
-    "antd": "^3.24.3",
-    "react": "^16.8.0",
-    "react-dom": "^16.8.0"
+  "gitHooks": {
+    "pre-commit": "lint-staged"
+  },
+  "lint-staged": {
+    "*.{js,jsx,less,md,json}": [
+      "prettier --write"
+    ],
+    "*.ts?(x)": [
+      "prettier --parser=typescript --write"
+    ]
+  },
+  "dependencies": {
+    "@ant-design/pro-layout": "^5.0.12",
+    "@umijs/preset-react": "1.x",
+    "@umijs/test": "^3.2.28",
+    "ahooks": "^2.10.0",
+    "antd": "^4.15.0",
+    "fast-deep-equal": "^3.1.3",
+    "lint-staged": "^10.0.7",
+    "mockjs": "^1.1.0",
+    "prettier": "^1.19.1",
+    "react": "^16.12.0",
+    "react-dom": "^16.12.0",
+    "umi": "^3.2.28",
+    "yorkie": "^2.0.0"
   },
   "devDependencies": {
-    "@babel/preset-env": "^7.6.3",
-    "@storybook/addon-options": "^5.2.5",
-    "@storybook/react": "^5.2.5",
-    "@typescript-eslint/parser": "^2.6.1",
-    "antd": "^3.24.3",
-    "babel-plugin-import": "^1.12.2",
-    "babel-preset-env": "^1.7.0",
-    "babel-preset-react": "^6.24.1",
-    "css-loader": "^3.2.0",
-    "eslint": "^6.6.0",
-    "eslint-config-prettier": "^6.5.0",
-    "eslint-plugin-react-hooks": "^2.2.0",
-    "less-loader": "^5.0.0",
-    "prettier": "^1.18.2",
-    "style-loader": "^1.0.0"
+    "@types/mockjs": "^1.0.3"
   }
 }
