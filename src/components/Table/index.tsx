@@ -1,4 +1,3 @@
-import { Form, Input } from 'antd';
 import { FormListProps } from 'antd/lib/form';
 import { NamePath } from 'antd/lib/form/interface';
 import { createForm } from 'rc-form';
@@ -6,11 +5,14 @@ import React, {
   cloneElement,
   createElement,
   ReactElement,
+  useMemo,
+  useReducer,
   useState,
 } from 'react';
 import {
   CellFormItemProps,
   RowProps,
+  TableFormListOperation,
   TableProps,
   TableWithForm,
   TableWithOutForm,
@@ -25,54 +27,6 @@ const parseNamePath = (name1: NamePath, name2: number): NamePath => {
   }
 };
 
-const Row = createForm<RowProps>()(
-  ({ form, index, columns, record, formList }) => {
-    const [editable, setEditable] = useState(false);
-    return (
-      <tr>
-        {columns.map((column, columnIndex) => {
-          // record 可能为空, 新增一行的时候
-          const text =
-            column.dataIndex && record
-              ? ((record[column.dataIndex] as unknown) as string)
-              : '';
-          const renderItem = column.renderFormItem || column.render;
-          const [field, operator, meta] = formList || [];
-          const cellProps: CellFormItemProps<any> = {
-            column,
-            text,
-            record,
-            index,
-            form,
-            editable,
-            setEditable,
-          };
-          if (operator) {
-            // 操作项设置
-            const tableOperator = {
-              ...operator,
-              save() {
-                console.log('index.tsx:34', form);
-              },
-              cancel() {},
-            };
-            Object.assign(cellProps, {
-              operator: tableOperator,
-              field,
-              meta,
-            });
-          }
-          return (
-            <Cell key={(column.dataIndex as string) || columnIndex}>
-              {renderItem ? createElement(renderItem, cellProps) : text}
-            </Cell>
-          );
-        })}
-      </tr>
-    );
-  },
-);
-
 export function Table<R>(props: TableWithForm<R> & TableProps<R>): JSX.Element;
 export function Table<R>(
   props: TableWithOutForm<R> & TableProps<R>,
@@ -82,6 +36,71 @@ export function Table<R>({
   ...props
 }: (TableWithForm<R> | TableWithOutForm<R>) & TableProps<R>) {
   let content;
+
+  const Row = useMemo(
+    () =>
+      createForm<RowProps<R>, R>()(
+        ({ form, index, columns, record, formList }) => {
+          const [editable, setEditable] = useState(false);
+          const [, forceUpdate] = useReducer(s => s + 1, 0);
+          return (
+            <tr>
+              {columns.map((column, columnIndex) => {
+                // record 可能为空, 新增一行的时候
+                const text =
+                  column.dataIndex && record
+                    ? ((record[column.dataIndex] as unknown) as string)
+                    : '';
+                const renderItem = column.renderFormItem || column.render;
+                const [field, operator, meta] = formList || [];
+                const cellProps: CellFormItemProps<any> = {
+                  column,
+                  text,
+                  record,
+                  index,
+                  form,
+                  editable,
+                  setEditable,
+                };
+                if (operator && field) {
+                  // 操作项设置
+                  const tableOperator: TableFormListOperation<R> = {
+                    ...operator,
+                    add(newRecord, insertIndex) {
+                      operator.add(newRecord, insertIndex ?? field.name + 1);
+                    },
+                    async save() {
+                      await form.validateFields();
+                      const values = form.getFieldsValue();
+                      form.setFieldsInitialValue(values);
+                      forceUpdate();
+                    },
+                    remove() {
+                      operator.remove(field.name);
+                    },
+                    cancel() {
+                      form.resetFields();
+                    },
+                  };
+                  Object.assign(cellProps, {
+                    operator: tableOperator,
+                    field,
+                    meta,
+                  });
+                }
+                return (
+                  <Cell key={(column.dataIndex as string) || columnIndex}>
+                    {renderItem ? createElement(renderItem, cellProps) : text}
+                  </Cell>
+                );
+              })}
+            </tr>
+          );
+        },
+      ),
+    [],
+  );
+
   // 含表单
   if ('formList' in props) {
     const { formList, form, name } = props;

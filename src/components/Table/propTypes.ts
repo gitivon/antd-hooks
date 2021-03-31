@@ -13,10 +13,10 @@ import {
 interface FormListMeta {
   errors: React.ReactNode[];
 }
-interface TableFormListOperation<R> {
+export interface TableFormListOperation<R> {
   save: () => void;
   cancel: () => void;
-  add: (item: R, insertIndex: number) => void;
+  add: (newRecord?: R, insertIndex?: number) => void;
   remove: () => void;
   move: (form: number, to: number) => void;
 }

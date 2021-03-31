@@ -15,7 +15,15 @@ declare module 'rc-form' {
 
   export interface RcFormInstance<R> {
     getValueProps(): void;
+    setFieldsInitialValue(obj: R): void;
+    getFieldsValue(fieldNames?: string[]): R;
     getFieldDecorator: (name: string, options?: any) => any;
+    resetFields: (names?: string[]) => void;
+    validateFields(
+      fieldNames?: string[],
+      options?: any,
+      callback?: (errors: any, values: R) => void,
+    ): any;
     [k: string]: any;
   }
 

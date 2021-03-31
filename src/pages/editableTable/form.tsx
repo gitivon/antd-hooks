@@ -56,16 +56,31 @@ export default function UseService() {
       },
       {
         title: '操作',
-        render: ({ text, record, index, form, field, operator }) => {
+        render: ({ index, operator }) => {
           return (
-            <Space>
+            <Space split={'|'} size={0}>
               {operator && (
                 <>
+                  <Button type="link" onClick={() => operator.add()}>
+                    添加一行
+                  </Button>
                   <Button type="link" onClick={operator.save}>
                     保存
                   </Button>
                   <Button type="link" onClick={operator.cancel}>
                     取消
+                  </Button>
+                  <Button
+                    type="link"
+                    onClick={() => operator.move(index, index - 1)}
+                  >
+                    上移
+                  </Button>
+                  <Button
+                    type="link"
+                    onClick={() => operator.move(index, index + 1)}
+                  >
+                    下移
                   </Button>
                   <Button type="link" onClick={operator.remove}>
                     删除
