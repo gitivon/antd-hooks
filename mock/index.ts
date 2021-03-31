@@ -4,7 +4,7 @@ export default {
   'GET /api/listPage': mock({
     data: {
       name: '张三',
-      'list|10': [
+      'list|5': [
         {
           'id|+1': 1,
           name: '@name',

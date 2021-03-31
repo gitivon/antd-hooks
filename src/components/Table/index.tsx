@@ -1,97 +1,124 @@
-import React, {
-  cloneElement,
-  FC,
-  Key,
-  PropsWithChildren,
-  ReactElement,
-} from 'react';
-import { Space, Input, Form, Button } from 'antd';
-import { Cell } from './Tr';
-import { FormItemProps } from 'antd';
+import { Form, Input } from 'antd';
 import { FormListProps } from 'antd/lib/form';
 import { NamePath } from 'antd/lib/form/interface';
+import { createForm } from 'rc-form';
+import React, {
+  cloneElement,
+  createElement,
+  ReactElement,
+  useState,
+} from 'react';
+import {
+  CellFormItemProps,
+  RowProps,
+  TableProps,
+  TableWithForm,
+  TableWithOutForm,
+} from './propTypes';
+import { Cell, getRowKey } from './Tr';
 
-export interface ColumnType<RecordType extends Record<string, any>> {
-  title: string;
-  dataIndex: keyof RecordType;
-  render?: () => JSX.Element;
-  formItemProps?: FormItemProps;
-}
-export type ColumnsType<RecordType> = ColumnType<RecordType>[];
-export interface EditableProps<RecordType> {
-  rowKey: (record: RecordType) => Key;
-}
-export interface TableProps<RecordType> {
-  dataSource?: RecordType[];
-  columns?: ColumnsType<RecordType>;
-  editable?: EditableProps<RecordType>;
-  formList?: Parameters<FormListProps['children']>;
-}
+const parseNamePath = (name1: NamePath, name2: number): NamePath => {
+  if (Array.isArray(name1)) {
+    return [...name1, name2];
+  } else {
+    return [name1, name2];
+  }
+};
 
-export function Table<RecordType>({
-  columns = [],
-  dataSource = [],
-  formList,
-  ...props
-}: PropsWithChildren<TableProps<RecordType>>) {
-  let content;
-  let tfoot;
-  if (formList) {
-    const [fields, operator, meta] = formList;
-    tfoot = (
+const Row = createForm<RowProps>()(
+  ({ form, index, columns, record, formList }) => {
+    const [editable, setEditable] = useState(false);
+    return (
       <tr>
-        <td colSpan={columns.length}>
-          <Button type="link" onClick={() => operator.add()}>
-            添加一行
-          </Button>
-        </td>
+        {columns.map((column, columnIndex) => {
+          // record 可能为空, 新增一行的时候
+          const text =
+            column.dataIndex && record
+              ? ((record[column.dataIndex] as unknown) as string)
+              : '';
+          const renderItem = column.renderFormItem || column.render;
+          const [field, operator, meta] = formList || [];
+          const cellProps: CellFormItemProps<any> = {
+            column,
+            text,
+            record,
+            index,
+            form,
+            editable,
+            setEditable,
+          };
+          if (operator) {
+            // 操作项设置
+            const tableOperator = {
+              ...operator,
+              save() {
+                console.log('index.tsx:34', form);
+              },
+              cancel() {},
+            };
+            Object.assign(cellProps, {
+              operator: tableOperator,
+              field,
+              meta,
+            });
+          }
+          return (
+            <Cell key={(column.dataIndex as string) || columnIndex}>
+              {renderItem ? createElement(renderItem, cellProps) : text}
+            </Cell>
+          );
+        })}
       </tr>
     );
-    content = fields.map(field => {
+  },
+);
+
+export function Table<R>(props: TableWithForm<R> & TableProps<R>): JSX.Element;
+export function Table<R>(
+  props: TableWithOutForm<R> & TableProps<R>,
+): JSX.Element;
+export function Table<R>({
+  columns = [],
+  ...props
+}: (TableWithForm<R> | TableWithOutForm<R>) & TableProps<R>) {
+  let content;
+  // 含表单
+  if ('formList' in props) {
+    const { formList, form, name } = props;
+    const [fields, operator, meta] = formList;
+    content = fields.map((field, rowIndex) => {
+      const record = form.getFieldValue(parseNamePath(name, field.name));
       return (
-        <tr key={field.key}>
-          {columns.map(column => {
-            const name: NamePath = [field.name, column.dataIndex.toString()];
-            return (
-              <Cell key={column.dataIndex as string}>
-                <Form.Item name={name}>
-                  <Input />
-                </Form.Item>
-              </Cell>
-            );
-          })}
-        </tr>
+        <Row
+          index={rowIndex}
+          key={field.key}
+          columns={columns}
+          record={record}
+          formList={[field, operator, meta]}
+        />
       );
     });
   } else {
+    // 不含表单
+    const { dataSource = [] } = props;
     content = dataSource.map((record, index) => {
-      return (
-        <tr key={index}>
-          {columns.map(column => {
-            return (
-              <Cell key={column.dataIndex as string}>
-                {record[column.dataIndex]}
-              </Cell>
-            );
-          })}
-        </tr>
-      );
+      const key = getRowKey(record, props.rowKey, index);
+      return <Row key={key} columns={columns} record={record} index={index} />;
     });
   }
   return (
-    <>
-      <table style={{ width: '100%' }}>
-        <thead>
-          <tr>
-            {columns.map(column => (
-              <th key={column.dataIndex as string}>{column.title}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>{content}</tbody>
-        <tfoot>{tfoot}</tfoot>
-      </table>
-    </>
+    <table style={{ width: '100%' }}>
+      <thead>
+        <tr>
+          {columns.map((column, columnIndex) => (
+            <th key={(column.dataIndex as string) || `thead${columnIndex}`}>
+              {column.title}
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>{content}</tbody>
+    </table>
   );
 }
 
