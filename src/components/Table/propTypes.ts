@@ -1,9 +1,8 @@
 import { FormItemProps } from 'antd';
-import { FormInstance, FormListProps } from 'antd/lib/form';
+import { FormInstance, FormListProps, FormProps } from 'antd/lib/form';
 import { FormListFieldData, FormListOperation } from 'antd/lib/form/FormList';
 import { NamePath } from 'antd/lib/form/interface';
-import { RcFormInstance, RcFormOptions } from 'rc-form';
-import { Key, ReactNode } from 'react';
+import { Key } from 'react';
 import {
   TableCellComponent,
   TableFormItemComponent,
@@ -25,10 +24,10 @@ export interface CellFormItemProps<RecordType = any> {
   operator?: TableFormListOperation<RecordType>;
   meta?: FormListMeta;
   column: ColumnType<RecordType>;
-  form: RcFormInstance<RecordType>;
+  form: FormInstance<RecordType>;
   text: any;
   index: number;
-  editable: boolean;
+  editing: boolean;
   setEditable: React.Dispatch<React.SetStateAction<boolean>>;
   record: RecordType;
 }
@@ -38,7 +37,12 @@ export type RowKey<R> = string | ((record: R, index: number) => Key);
 export interface RowProps<R = any> {
   record: R;
   index: number;
+  parentForm?: {
+    form: FormInstance<R>;
+    name: NamePath;
+  };
   columns: ColumnsType<R>;
+  editable?: EditableProps<R>;
   formList?: [FormListFieldData, FormListOperation, FormListMeta];
 }
 
@@ -49,9 +53,17 @@ export interface ColumnType<RecordType extends Record<string, any>> {
   renderFormItem?: TableFormItemComponent<RecordType>;
   formItemProps?: FormItemProps;
 }
+export type FormSaveHandler<RecordType> = (
+  record: RecordType,
+  meta: {
+    formList?: [FormListFieldData, FormListOperation, FormListMeta];
+    form: FormInstance<RecordType>;
+  },
+) => any;
 export type ColumnsType<RecordType> = ColumnType<RecordType>[];
 export interface EditableProps<RecordType> {
-  onSave?: (record: RecordType, form: FormInstance<RecordType>) => any;
+  formProps?: FormProps<RecordType>;
+  onSave?: FormSaveHandler<RecordType>;
   rowKey?: (record: RecordType) => Key;
   // formProps: RcFormOptions;
 }

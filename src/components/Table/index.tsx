@@ -1,12 +1,10 @@
-import { FormListProps } from 'antd/lib/form';
+import Form, { FormListProps } from 'antd/lib/form';
 import { NamePath } from 'antd/lib/form/interface';
-import { createForm } from 'rc-form';
+import set from 'lodash.set';
 import React, {
   cloneElement,
   createElement,
   ReactElement,
-  useMemo,
-  useReducer,
   useState,
 } from 'react';
 import {
@@ -27,80 +25,100 @@ const parseNamePath = (name1: NamePath, name2: number): NamePath => {
   }
 };
 
+function Row<R>({
+  editable,
+  index,
+  columns,
+  record,
+  formList,
+  parentForm,
+}: RowProps<R>) {
+  const [editing, setEditable] = useState(false);
+  const { formProps, onSave } = editable ?? {};
+  const [form] = Form.useForm<R>(formProps?.form);
+  return (
+    <tr>
+      <Form initialValues={record} {...formProps} form={form} component={false}>
+        {columns.map((column, columnIndex) => {
+          // record 可能为空, 新增一行的时候
+          const text =
+            column.dataIndex && record
+              ? ((record[column.dataIndex] as unknown) as string)
+              : '';
+          const renderItem = column.renderFormItem || column.render;
+          const [field, operator, meta] = formList || [];
+          const cellProps: CellFormItemProps<any> = {
+            column,
+            text,
+            record,
+            index,
+            form,
+            editing,
+            setEditable,
+          };
+          if (operator && field) {
+            // 操作项设置
+            const tableOperator: TableFormListOperation<R> = {
+              ...operator,
+              add(newRecord, insertIndex) {
+                operator.add(newRecord, insertIndex ?? field.name + 1);
+              },
+              async save() {
+                form.submit();
+                if (onSave) {
+                  const values: R = form.getFieldsValue(true);
+                  await onSave(values, {
+                    formList,
+                    form,
+                  });
+                  // 同步
+                  if (parentForm) {
+                    const parentFormValues: R[] = parentForm.form.getFieldsValue(
+                      true,
+                    );
+                    const nextValue = set(
+                      parentFormValues,
+                      parseNamePath(parentForm.name, field.name),
+                      values,
+                    );
+                    parentForm.form.setFieldsValue(nextValue);
+                  }
+                }
+              },
+              remove() {
+                operator.remove(field.name);
+              },
+              cancel() {
+                form.resetFields();
+              },
+            };
+            Object.assign(cellProps, {
+              operator: tableOperator,
+              field,
+              meta,
+            });
+          }
+          return (
+            <Cell key={(column.dataIndex as string) || columnIndex}>
+              {renderItem ? createElement(renderItem, cellProps) : text}
+            </Cell>
+          );
+        })}
+      </Form>
+    </tr>
+  );
+}
+
 export function Table<R>(props: TableWithForm<R> & TableProps<R>): JSX.Element;
 export function Table<R>(
   props: TableWithOutForm<R> & TableProps<R>,
 ): JSX.Element;
 export function Table<R>({
   columns = [],
+  editable,
   ...props
 }: (TableWithForm<R> | TableWithOutForm<R>) & TableProps<R>) {
   let content;
-
-  const Row = useMemo(
-    () =>
-      createForm<RowProps<R>, R>()(
-        ({ form, index, columns, record, formList }) => {
-          const [editable, setEditable] = useState(false);
-          const [, forceUpdate] = useReducer(s => s + 1, 0);
-          return (
-            <tr>
-              {columns.map((column, columnIndex) => {
-                // record 可能为空, 新增一行的时候
-                const text =
-                  column.dataIndex && record
-                    ? ((record[column.dataIndex] as unknown) as string)
-                    : '';
-                const renderItem = column.renderFormItem || column.render;
-                const [field, operator, meta] = formList || [];
-                const cellProps: CellFormItemProps<any> = {
-                  column,
-                  text,
-                  record,
-                  index,
-                  form,
-                  editable,
-                  setEditable,
-                };
-                if (operator && field) {
-                  // 操作项设置
-                  const tableOperator: TableFormListOperation<R> = {
-                    ...operator,
-                    add(newRecord, insertIndex) {
-                      operator.add(newRecord, insertIndex ?? field.name + 1);
-                    },
-                    async save() {
-                      await form.validateFields();
-                      const values = form.getFieldsValue();
-                      form.setFieldsInitialValue(values);
-                      forceUpdate();
-                    },
-                    remove() {
-                      operator.remove(field.name);
-                    },
-                    cancel() {
-                      form.resetFields();
-                    },
-                  };
-                  Object.assign(cellProps, {
-                    operator: tableOperator,
-                    field,
-                    meta,
-                  });
-                }
-                return (
-                  <Cell key={(column.dataIndex as string) || columnIndex}>
-                    {renderItem ? createElement(renderItem, cellProps) : text}
-                  </Cell>
-                );
-              })}
-            </tr>
-          );
-        },
-      ),
-    [],
-  );
-
   // 含表单
   if ('formList' in props) {
     const { formList, form, name } = props;
@@ -109,10 +127,12 @@ export function Table<R>({
       const record = form.getFieldValue(parseNamePath(name, field.name));
       return (
         <Row
+          editable={editable}
           index={rowIndex}
           key={field.key}
           columns={columns}
           record={record}
+          parentForm={{ form, name }}
           formList={[field, operator, meta]}
         />
       );
@@ -122,7 +142,15 @@ export function Table<R>({
     const { dataSource = [] } = props;
     content = dataSource.map((record, index) => {
       const key = getRowKey(record, props.rowKey, index);
-      return <Row key={key} columns={columns} record={record} index={index} />;
+      return (
+        <Row
+          key={key}
+          editable={editable}
+          columns={columns}
+          record={record}
+          index={index}
+        />
+      );
     });
   }
   return (

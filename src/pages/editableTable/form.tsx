@@ -1,8 +1,12 @@
 import { Table } from '@/components/Table';
-import { CellFormItemProps, ColumnsType } from '@/components/Table/propTypes';
+import {
+  CellFormItemProps,
+  ColumnsType,
+  FormSaveHandler,
+} from '@/components/Table/propTypes';
 import useService from '@/hooks/useService';
-import { Button, Form, Input, Space } from 'antd';
-import React, { useMemo, useState } from 'react';
+import { Button, Form, Input, Space, message } from 'antd';
+import React, { useMemo, useState, useCallback } from 'react';
 import { request } from 'umi';
 
 interface Person {
@@ -25,23 +29,17 @@ const listPage = (pageNum?: string, pageSize?: string) => {
 };
 
 const Name = ({ form, text, column }: CellFormItemProps<Person>) => {
-  return form.getFieldDecorator(column.dataIndex, {
-    initialValue: text,
-    rules: [{ required: true }],
-  })(<Input />);
+  return (
+    <Form.Item name={column.dataIndex} rules={[{ required: true }]} noStyle>
+      <Input />
+    </Form.Item>
+  );
 };
 
 export default function UseService() {
+  const [form] = Form.useForm();
   const [pageNum, setPageNum] = useState('1');
   const result = useService(listPage, [pageNum]);
-
-  const onSave = (record: Person) => {
-    console.log('form.tsx:39', record);
-  };
-  const onCancel = (form: any) => {
-    form.resetFields();
-  };
-
   const columns: ColumnsType<Person> = useMemo(() => {
     return [
       {
@@ -93,8 +91,10 @@ export default function UseService() {
       },
     ];
   }, []);
+  const onSave: FormSaveHandler<Person> = useCallback(record => {
+    message.success('保存成功');
+  }, []);
 
-  const [form] = Form.useForm();
   return result.data ? (
     <>
       <Space direction="vertical" style={{ width: '100%' }}>

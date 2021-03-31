@@ -1,5 +1,7 @@
+declare module 'lodash.set';
+
 declare module 'rc-form' {
-  import { ComponentType, PropsWithChildren } from 'react';
+  import { ComponentType } from 'react';
 
   export interface InjectFormProps<R> {
     form: RcFormInstance<R>;
