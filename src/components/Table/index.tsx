@@ -1,4 +1,4 @@
-import Form, { FormListProps } from 'antd/lib/form';
+import { FormListProps } from 'antd/lib/form';
 import { NamePath } from 'antd/lib/form/interface';
 import set from 'lodash.set';
 import React, {
@@ -16,6 +16,9 @@ import {
   TableWithOutForm,
 } from './propTypes';
 import { Cell, getRowKey } from './Tr';
+import { Space, Pagination, Button, Form } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
+import './index.less';
 
 const parseNamePath = (name1: NamePath, name2: number): NamePath => {
   if (Array.isArray(name1)) {
@@ -116,13 +119,20 @@ export function Table<R>(
 export function Table<R>({
   columns = [],
   editable,
+  pagination,
   ...props
 }: (TableWithForm<R> | TableWithOutForm<R>) & TableProps<R>) {
   let content;
+  let errors = null;
+  let onAddBtnClick;
+  const { addBtn = '添加一行', newRecord } = editable || {};
   // 含表单
   if ('formList' in props) {
     const { formList, form, name } = props;
     const [fields, operator, meta] = formList;
+    onAddBtnClick = () => {
+      operator.add(newRecord?.());
+    };
     content = fields.map((field, rowIndex) => {
       const record = form.getFieldValue(parseNamePath(name, field.name));
       return (
@@ -137,6 +147,7 @@ export function Table<R>({
         />
       );
     });
+    errors = <Form.ErrorList errors={meta.errors} />;
   } else {
     // 不含表单
     const { dataSource = [] } = props;
@@ -153,8 +164,23 @@ export function Table<R>({
       );
     });
   }
+  const renderAddBtn =
+    addBtn !== false
+      ? cloneElement(
+          typeof addBtn === 'string' ? (
+            <Button type="link">
+              <PlusOutlined /> {addBtn}
+            </Button>
+          ) : (
+            addBtn
+          ),
+          {
+            onClick: onAddBtnClick,
+          },
+        )
+      : null;
   return (
-    <table style={{ width: '100%' }}>
+    <table className="pro-table" style={{ width: '100%' }}>
       <thead>
         <tr>
           {columns.map((column, columnIndex) => (
@@ -165,6 +191,26 @@ export function Table<R>({
         </tr>
       </thead>
       <tbody>{content}</tbody>
+      {pagination && addBtn !== false && (
+        <tfoot>
+          <tr>
+            <td
+              colSpan={columns.length}
+              style={{
+                padding: 15,
+              }}
+            >
+              <div className="pro-table-footer">
+                <Space>
+                  {renderAddBtn}
+                  {errors}
+                </Space>
+                {pagination && <Pagination {...pagination} />}
+              </div>
+            </td>
+          </tr>
+        </tfoot>
+      )}
     </table>
   );
 }

@@ -1,8 +1,8 @@
-import { FormItemProps } from 'antd';
+import { FormItemProps, PaginationProps } from 'antd';
 import { FormInstance, FormListProps, FormProps } from 'antd/lib/form';
 import { FormListFieldData, FormListOperation } from 'antd/lib/form/FormList';
 import { NamePath } from 'antd/lib/form/interface';
-import { Key } from 'react';
+import { Key, ReactElement, ReactNode } from 'react';
 import {
   TableCellComponent,
   TableFormItemComponent,
@@ -63,6 +63,8 @@ export type FormSaveHandler<RecordType> = (
 export type ColumnsType<RecordType> = ColumnType<RecordType>[];
 export interface EditableProps<RecordType> {
   formProps?: FormProps<RecordType>;
+  newRecord?: () => Partial<RecordType>;
+  addBtn?: ReactElement | false;
   onSave?: FormSaveHandler<RecordType>;
   rowKey?: (record: RecordType) => Key;
   // formProps: RcFormOptions;
@@ -70,6 +72,7 @@ export interface EditableProps<RecordType> {
 export interface TableProps<RecordType> {
   columns?: ColumnsType<RecordType>;
   editable?: EditableProps<RecordType>;
+  pagination?: PaginationProps | false;
   components?: {
     row: TableRowComponent<RecordType>;
     cell: TableCellComponent;

@@ -37,7 +37,7 @@ const Name = ({ form, text, column }: CellFormItemProps<Person>) => {
 };
 
 export default function UseService() {
-  const [form] = Form.useForm();
+  const [form] = Form.useForm<Person>();
   const [pageNum, setPageNum] = useState('1');
   const result = useService(listPage, [pageNum]);
   const columns: ColumnsType<Person> = useMemo(() => {
@@ -123,14 +123,22 @@ export default function UseService() {
                     name="list"
                     columns={columns}
                     formList={formList}
+                    pagination={{
+                      total: 100,
+                    }}
                     editable={{
+                      newRecord() {
+                        return {
+                          id: 666,
+                        };
+                      },
                       onSave,
                     }}
                   />
-                  <Form.ErrorList errors={errors} />
+                  {/* <Form.ErrorList errors={errors} />
                   <Button type="link" onClick={() => add()}>
                     添加一行
-                  </Button>
+                  </Button> */}
                 </>
               );
             }}
