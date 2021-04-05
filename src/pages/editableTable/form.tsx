@@ -28,7 +28,7 @@ const listPage = (pageNum?: string, pageSize?: string) => {
   });
 };
 
-const Name = ({ form, text, column }: CellFormItemProps<Person>) => {
+const Name = ({ column }: CellFormItemProps<Person>) => {
   return (
     <Form.Item name={column.dataIndex} rules={[{ required: true }]} noStyle>
       <Input />
