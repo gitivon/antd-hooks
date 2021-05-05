@@ -1,6 +1,5 @@
 import { Table } from 'antd';
 import type { ColumnsType } from 'antd/lib/table';
-import { useEffect } from 'react';
 import { request, useRequest } from 'umi';
 import type { UserModel } from './models/user';
 
