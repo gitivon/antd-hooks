@@ -1,5 +1,5 @@
-import type { RequestConfig } from 'umi';
 import 'reflect-metadata';
+import type { RequestConfig } from 'umi';
 
 export const request: RequestConfig = {
   errorConfig: {},
